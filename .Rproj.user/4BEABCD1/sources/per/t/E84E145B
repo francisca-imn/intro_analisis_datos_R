@@ -1,0 +1,32 @@
+{
+    "id": "E84E145B",
+    "path": "~/Documents/curso_programacion_r/curso_programacion_r.qmd",
+    "project_path": "curso_programacion_r.qmd",
+    "type": "quarto_markdown",
+    "hash": "1783807894",
+    "contents": "",
+    "dirty": false,
+    "created": 1768582173637.0,
+    "source_on_save": false,
+    "relative_order": 2,
+    "properties": {
+        "rmdVisualMode": "false",
+        "rmdVisualWrapConfigured": "true",
+        "chunk_output_type": "console",
+        "source_window_id": "",
+        "Source": "Source",
+        "docOutlineVisible": "1",
+        "cursorPosition": "969,0",
+        "scrollLine": "947",
+        "rmdVisualModeLocation": "2:0",
+        "rmdVisualCollapsedChunks": ""
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1768582905,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1768582905,
+    "read_only": false,
+    "read_only_alternatives": []
+}

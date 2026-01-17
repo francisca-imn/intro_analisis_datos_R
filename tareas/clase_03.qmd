@@ -1,0 +1,51 @@
+---
+title: "Tarea 03"
+author: "Francisca Muñoz Narbona"
+format: docx
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, results = F)
+```
+
+## Cargar datos
+
+```{r}
+library(tidyverse)
+pokemon <- read_csv("datos/pokemon.csv")
+```
+
+## Pregunta 1: ¿En qué generación hay más pokemon diferentes?
+
+```{r}
+pokemon %>% 
+  select(ID_poke, generacion) %>% 
+  group_by(generacion) %>% 
+  summarise(n = n_distinct(ID_poke))
+```
+
+En la 5ta generación hay más pokemon diferentes.
+
+## Pregunta 2: ¿De qué tipo son los pokemon legendarios más veloces?
+
+```{r}
+pokemon %>% 
+  select(nombre_traducido, tipo_1, velocidad, es_legendario) %>% 
+  filter(es_legendario == "VERDADERO") %>%
+  group_by(tipo_1) %>% 
+  summarise(promedio = mean(velocidad)) %>% 
+  arrange(-promedio) # Lo ordeno de mayor a menor
+```
+
+Los pokemon de tipo Volador, Psíquico y Oscuro son los más veloces, con una velocidad promedio de 116, 115 y 112 respectivamente.
+
+# Pregunta 3
+
+```{r}
+pokemon %>% 
+  group_by(generacion) %>% 
+  mutate(mean_total_generacion = mean(total))
+```

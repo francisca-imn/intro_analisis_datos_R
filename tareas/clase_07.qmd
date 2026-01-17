@@ -1,0 +1,128 @@
+---
+title: "Reporte pokemons"
+author: "Francisca Muñoz Narbona"
+format:
+  docx:
+    reference-doc: referencia.docx
+editor: visual
+editor_options: 
+  chunk_output_type: console
+execute: 
+  dpi: 300
+echo: TRUE
+warning: FALSE
+message: FALSE
+results: FALSE
+---
+
+# Contextualización y objetivos
+
+El siguiente representa el desarrollo de la tarea 07 del curso "Introducción al análisis de datos en R", impartido por Stephanie Orellana de Cienciambiental. El objetivo de la tarea es desarrollar un mini reporte en RMarkdown (o quarto) que pueda ser exportado como un archivo .docx de Word, demostrando los conocimientos básicos enseñados en la clase.
+
+Para términos prácticos y facilitar la recorrección, el word generado mostrará el código utilizado para la impresión de tablas y figuras.
+
+# Análisis
+## Datos disponibles
+
+Se trabaja con una base de datos de Pokemon y sus apariciones en películas. Se utilizan conocimientos aprendiendo en clases anteriores, generando el archivo `pokemon_peliculas` una planilla conjunta que abarca datos de ambas fuentes.
+
+```{r}
+library(tidyverse)
+
+pokemon <- read_csv("datos/pokemon.csv")
+apariciones <- read_csv("datos/apariciones.csv")
+
+pokemon_peliculas <- pokemon %>% 
+  left_join(apariciones, by = c("nombre_ingles" = "pokemon"))
+```
+
+## Resumen de información
+
+Se hace una rápida revisión de las variables disponibles de los pokemons. Existe información sobre sus tipos, puntos de vida, nivel de ataque, de defensa, velocidad, generación, etc. 
+
+```{r variables disponibles, results='asis'}
+var_disponibles <- tibble(
+  variables = names(pokemon_peliculas))
+
+library(kableExtra)
+kable(var_disponibles, format = "pandoc")
+```
+
+Agrupando por la generación, y si es legendario o no, se hace una tabla resumen de algunas de las variables descriptoras de los pokemons:
+
+```{r tabla resumen, results='asis', dpi = 300}
+resumen <- pokemon_peliculas %>% 
+  group_by(generacion, es_legendario) %>% 
+  summarise(puntos_vida = round(mean(puntos_vida),1),
+            ataque = round(mean(ataque), 1),
+            defensa = round(mean(defensa), 1),
+            velocidad = round(mean(velocidad),1))
+
+options(knitr.kable.NA = "-")
+kableExtra::kable(resumen, format = "pandoc")
+```
+
+Luego, para simplicar la discusión de la tabla anterior, se realiza la siguiente figura para ver la diferencia entre generaciones. De manera muy general, se observa una diferencia significativa entre todas las variables respecto de si es Legendario o No Legendario. También, respecto a No Lengendarios, la 4ta generación de pokemon es la que tiene mayores valores medios en todas sus características analizadas. Respecto a los Legendarios, no se identifica a simple vista una predominancia de alguna generación.
+
+```{r figura, fig.height=6, fig.width=7, dpi=300}
+# Tabla se transforma a formato largo para graficar más fácil
+resumen_longer <- resumen %>% 
+  pivot_longer(cols = puntos_vida:velocidad,
+               names_to = "variable",
+               values_to = "media") %>% 
+  mutate(es_legendario = case_when(es_legendario == "FALSO" ~ "No legendario",
+                                TRUE ~ "Legendario"),
+         variable = case_when(variable == "ataque" ~ "Ataque",
+                              variable == "defensa" ~ "Defensa",
+                              variable == "puntos_vida" ~ "Puntos de vida",
+                              variable == "velocidad" ~ "Velocidad",
+                              TRUE ~ variable))
+
+ggplot(resumen_longer, aes(x = as.factor(generacion), y = media, colour = as.factor(variable))) +
+  geom_point(size = 1) +
+  geom_line(aes(group = variable), linewidth = 0.25)+
+  geom_text(aes(label = round(media, 1)), 
+            size = 2.5,
+            vjust = -0.5,
+            color = "grey20")+
+  scale_fill_manual(values = c("#E5989B", "#A8DADC", "#B7E4C7", "#FFD190"))+
+  scale_y_continuous(expand = expansion(mult = c(0.02, 0.15)))+
+  facet_grid(variable~es_legendario,
+             scales = "free_y",
+             space = "free_y") +
+  labs(y = "Valor medio",
+       x = "Generación",
+       caption = "Fran M.") +
+  theme(legend.position = "NULL",
+        strip.text.y = element_text(angle = 0), size = 8)
+```
+
+## Peliculas y legendarios
+
+Por último, se realiza una figura simple para saber cuántos pokemons legendarios y no legendarios aparecen en cada película.
+
+```{r, fig.height=3, fig.width=6, dpi = 300}
+pokemon_peliculas %>% 
+  group_by(pelicula, es_legendario) %>% 
+  summarise(n = n_distinct(nombre_ingles)) %>% 
+  ungroup() %>% 
+  mutate(pelicula = case_when(is.na(pelicula) ~ "Sin película",
+                              TRUE ~ pelicula)) %>% 
+  ggplot(aes(y = pelicula, x = n, fill = es_legendario)) +
+  geom_col() +
+  geom_text(aes(label = n), 
+            position = position_stack(vjust = 0.5),
+            size = 3)+
+  scale_fill_manual(values = c("#9DB4C0", "#E9A178"))+
+  scale_y_discrete(labels = \(x) stringr::str_wrap(x, width = 10))+
+  labs(y = "",
+       x = "Cantidad de pokemons",
+       fill = "¿Es legendario?")+
+  theme(legend.position = "bottom")
+```
+
+# Conclusión y palabras
+
+Es todo un mundo estudiar a Pokemons, muy entretenido para el análisis de datos. Muchas gracias por el curso, me parece muy útil principalmente para alguien del equipo de datos, todo lo que aprendí este tiempo en Cienci me sirvió para sintetizarlo en este curso. Para el trabajo de hacer figuras, es perfecto.
+
+Gracias Stephy!

@@ -1,0 +1,73 @@
+---
+title: "Tarea 04"
+author: "Francisca Muñoz Narbona"
+format: docx
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, results = F)
+```
+
+# Cargar datos
+
+```{r}
+library(tidyverse)
+
+pokemon <- read_csv("datos/pokemon.csv")
+apariciones <- read_csv("datos/apariciones.csv")
+```
+
+# Pregunta 1
+
+```{r}
+unique(pokemon$nombre_ingles)
+unique(apariciones$pokemon)
+```
+
+Duda: ¿Alguna función que me indique si algún pokemon esté escrito diferente entre las dos planillas, pero se refieran al mismo?
+
+```{r}
+pokemon_peliculas <- pokemon %>% 
+  left_join(apariciones, by = c("nombre_ingles" = "pokemon"))
+```
+
+En el set original de pokemon hay 800 observaciones, y en el pokemon_peliculas hay 840, eso quiere decir que se agregaron 40 nuevos pokemones, o bien, hay 40 observaciones de pokemones que estan escrito diferente a la planilla pokemon.
+
+# Pregunta 2
+
+¿Cuáles pokemones de los que aparecen en las películas, no se encuentran dentro del listado original?
+
+```{r}
+no_aparecen <- setdiff(apariciones$pokemon, pokemon$nombre_ingles)
+```
+
+Hay dos que están en el listado de películas, pero no en el listado original. Estos son: Comfey y Morelull.
+
+# Pregunta 3
+
+```{r}
+pokemon_wider <- pokemon_peliculas %>% 
+  select(nombre_traducido, pelicula, total) %>%
+  group_by(nombre_traducido, pelicula) %>% 
+  summarise(media = mean(total)) %>% 
+  filter(!is.na(pelicula)) %>% 
+  pivot_wider(names_from = "pelicula", values_from = "media")
+
+```
+
+# Pregunta 4
+
+```{r}
+pokemon_longer <- pokemon_peliculas %>% 
+  select(nombre_traducido, pelicula, tipo_1, tipo_2) %>% 
+  pivot_longer(cols = tipo_1:tipo_2,
+               names_to = "tipo",
+               values_to = "valor")
+
+pokemon_resumen <- pokemon_longer %>% 
+  group_by(tipo, pelicula) %>% 
+  summarise(riqueza = n_distinct(nombre_traducido))
+```

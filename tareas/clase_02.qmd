@@ -1,0 +1,66 @@
+---
+title: "Tarea 02"
+author: "Francisca Muñoz Narbona"
+format: docx
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, results = F)
+```
+
+# Tarea 02
+
+## Descargar y cargar datos
+
+```{r}
+library(tidyverse)
+pokemon <- read_csv("datos/pokemon.csv")
+```
+
+## Pregunta 1: Seleccionar las columnas ID_poke y nombre_traducido
+
+```{r}
+pokemon %>% select(ID_poke, nombre_traducido)
+```
+
+## Pregunta 2: Renombrar la columna ID_poke por id_poke
+
+```{r}
+pokemon %>% rename(id_poke = ID_poke)
+```
+
+## Pregunta 3: Filtrar los pokemon en donde su tipo_1 o tipo_2 sea igual a “Fuego”
+
+```{r}
+pokemon %>% filter(tipo_1 == "Fuego" | tipo_2 == "Fuego")
+```
+
+## Pregunta 4: Contar el número de pokemon con nivel_evolucion igual a 1 que hay por cada generacion
+
+```{r}
+# Opción 1: Dejando claro que el nivel de evolución es 1
+pokemon %>%
+  filter(nivel_evolucion == 1) %>%
+  group_by(generacion) %>%
+  count(nivel_evolucion)
+
+# Opción 2: Mas similar a lo de la clase
+pokemon %>% filter(nivel_evolucion == 1) %>% count(generacion)
+```
+
+## Pregunta 5: Encontrar los cinco pokemon con total más alto
+
+```{r}
+unique((pokemon %>% slice_max(total, n = 5))$nombre_traducido)
+```
+
+## Pregunta 6: Crear columna max y diferencia
+
+```{r}
+pokemon %>%
+  mutate(max = max(total, na.rm = TRUE),
+         diferencia = max - total)
+```

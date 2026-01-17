@@ -1,0 +1,60 @@
+---
+title: "Tarea 05"
+author: "Francisca Muñoz Narbona"
+format: docx
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, results = F)
+```
+
+# Cargar datos
+
+```{r}
+library(tidyverse)
+
+pokemon <- read_csv("datos/pokemon.csv")
+```
+
+# Pregunta 1
+
+```{r}
+pok_n_tipos <- pokemon %>% 
+  mutate(n_tipos = case_when(is.na(tipo_1) | is.na(tipo_2) ~ 1,
+                             TRUE ~ 2))
+```
+
+# Pregunta 2
+
+```{r}
+pok_top <- pokemon %>% 
+  mutate(top = case_when(total == max(total) ~ "max",
+                         TRUE ~ NA_character_))
+```
+
+# Pregunta 3
+
+```{r}
+pok_p3 <- pokemon %>% 
+  mutate(tipo_1 = case_when(tipo_1 == "Césped" ~ "Planta", TRUE ~ tipo_1),
+         tipo_2 = case_when(tipo_2 == "Césped" ~ "Planta", TRUE ~ tipo_2),
+         es_legendario = case_when(es_legendario == "VERDADERO" ~ "Sí", TRUE ~ "No"))
+```
+
+# Pregunta 4
+
+```{r}
+quantile(pokemon$total, na.rm = T)
+
+pok_p4 <- pokemon %>% 
+  mutate(categoria_total = case_when(total > 180 & total <= 330 ~ "bajo (0-25%)",
+                                     total > 330 & total <= 450 ~ "medio (25-50%)",
+                                     total > 450 & total <= 515 ~ "alto (50-75%)",
+                                     total > 515 ~ "muy alto (75-100%)",
+                                     TRUE ~ NA_character_)) #ojo, las otras condiciones devuelve texto, y la columna total es numérica, así que NA_character_
+
+
+```

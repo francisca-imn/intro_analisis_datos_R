@@ -1,0 +1,974 @@
+---
+title: "Apuntes"
+format: docx
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, results = F)
+```
+
+# Clase 01
+
+Se instala paquete kittyR.
+
+```{r}
+#install.packages("kittyR")
+#library(kittyR)
+
+# Instalar paquete kittyR: https://indrajeetpatil.github.io/kittyR/, no funciona!
+
+#install.packages("remotes")
+#remotes::install_github("IndrajeetPatil/kittyR")
+
+#kittyR(meow = TRUE)
+```
+
+# Clase 02
+
+## Introducción
+
+-   Software libre y gratuito, su lincencia. La comunidad crea herramientas/paquetes colaborativas gratuitamente.
+-   Se pueden instalar paquetes desde diferentes fuentes (CRAN, GitHub, BioConductor, etc).
+-   R es sensible a mayúsculas y minúsculas! Y no lo es a los espacios dentro de código, pero sí dentro de bases de datos.
+-   Valor datos faltantes: NA
+
+## Operadores
+
+```{r}
+#| echo: false
+#| results: asis
+
+tabla_operadores <- data.frame(
+  operador = c("+", ">", "<", ">=", "<=", "==", "=", "!=", "!", "|", "&", "%in%"),
+  descripcion = c("más", "mayor", "menor", "mayor o igual", "menor o igual", "igual exacto",
+                  "igual", "no igual", "no", "o", "y", "en un set"),
+  comentario = c("ojo, en ggplot es sumar capas", "", "", "", "", "", "", "", "", "","", "")
+)
+
+knitr::kable(tabla_operadores,
+             caption = "Operadores básicos en R")
+```
+
+## Tidyverse
+
+-   Es un gran paquete que incluye muchos paquetes, diseñados para hacer ciencia de datos.
+-   Con el pipe podemos concatenar sin hacer objetos intermedios (%\>%).
+-   Buscar atajos del teclado.
+
+### Importar datos
+
+-   **haven** -\> Ingresa datos de programas externos (matblab, stata, otros tipos de lenguajes de programación o software estadísticos que guarda archivos específicos).
+-   **readr** -\> Para archivos de texto (.txt)
+-   **readxl** -\> Para .xlsx
+
+### Intermedio
+
+-   **tidyr** -\> De formato ancho a largo, etc.
+
+### Transformar
+
+-   **dplyr** -\> Transformar
+-   **purrr** -\> bucles, iteraciones, lo simplifica
+-   **broom** -\> Para hacer modelación
+-   **ggplot2** -\> visualización datos
+
+### Comunicar datos
+
+-   **knitr**
+-   **markdown** -\> reportes, presentaciones, etc.
+
+### Para trabajar de dataframes
+
+-   **tibble**
+-   **forcats** -\> categoricos, factores
+-   **stringr**
+
+## Terminal
+
+Es lo que se comunica con el computador. MINGW64 escribimos como si estuvieramos en linux, es diferente entre linux, mc y windows.
+
+## Packages
+
+Abajo a la derecha, se ven todos los paquetes instalados. También si está marcado es porque está cargado (*library()*), sino no.
+
+```{r}
+library(ggplot2)
+library(plotly)
+
+p <- ggplot(iris, aes(x = Sepal.Length, y = Petal.Length, colour = Species)) +
+  geom_point()
+
+#plotly(p)
+# ojo, sale error!
+```
+
+## Apuntes
+
+-   setwd() es para directorio de trabajo, ya no se utiliza!
+-   Es importante que busque atajos del teclado, para hacer chuncks, hacer el pipe, etc.
+
+```{r}
+library(tidyverse)
+
+# Cargar con RBase:
+pin1 <- read.csv("datos/pinguinos.csv")
+
+# Cargar con tidyverse:
+pin2 <- read_csv("datos/pinguinos.csv")
+
+# Cargar directamente desde github:
+pin3 <- read_csv("https://raw.githubusercontent.com/rladieschile/taller-regex-2021/refs/heads/main/datos/pinguinos.csv")
+
+pin <- pin2
+```
+
+## Funciones básicas
+
+-   `select()` -\> Permite seleccionar **COLUMNAS**.
+
+```{r}
+select(pin, -sexo) #las quiero todas menos la columna sexo.
+select(pin, largo_pico_mm:masa_corporal_g) #selecciona columnas solo desde largo de pico hasta masa corporal
+select(pin, sexo, isla) #acá seleccioné solo 2 columnas, sexo e isla
+
+# CON PIPE:
+pin %>% select(-sexo)
+
+```
+
+-   `filter()` -\> Permite seleccionar filas según una condición
+
+```{r}
+filter(pin, isla == "Torgersen") #selecciono solo las Torgensen
+filter(pin, largo_pico_mm > 40, sexo == "hembra") #acá dos filtros
+
+pin %>% filter(largo_pico_mm > 45)
+
+pin %>% filter(especie %in% c("Adelia", "Barbijo"))
+pin %>% filter(especie != "Papúa")
+
+ad_tor <- pin %>% filter(especie == "Adelia" & isla == "Torgersen")
+ad_tor2 <- pin %>% filter(especie == "Adelia" | isla == "Torgersen")
+
+```
+
+-   `rename()` -\> Renombrar una columna
+
+```{r}
+pin %>% rename(isla_bonita = isla) # quiero que isla se llame isla_bonita ahora
+```
+
+-   `arrange()` -\> Ordenar según valores de una columna
+
+```{r}
+pin %>% arrange(largo_pico_mm) # de menor a mayor
+pin %>% arrange(desc(largo_pico_mm)) #descendiente, de mayor a menor
+pin %>% arrange(-largo_pico_mm) # lo mismo que lo de arriba
+pin %>% arrange(-largo_pico_mm, -alto_pico_mm) # esto dice que ordene descendiente por largo de pico primero, pero que si hay dos iguales, que orden por algo de pico descendiente.
+
+```
+
+-   `mutate()` -\> Hacer una nueva columna o modificar una existente
+
+```{r}
+a <- pin %>% mutate(gatito = "miuau", # creé nueva columna
+               largo_aleta_cm = largo_aleta_mm / 10, #creé nueva columna
+               anio = 2038, # modifiqué columna anio
+               largo_aleta_max = max(largo_aleta_mm, na.rm = TRUE)) # NA porque hay un pinguino que no tiene informacion, así que hay que agregarle segundo argumento
+```
+
+-   `slice()` -\> Saca una rodaja de los datos, ejemplo los 5 más grandes, más pequeños, etc. Extrae datos según una condición.
+
+```{r}
+pin %>% slice_max(largo_aleta_mm)
+pin %>% slice_max(masa_corporal_g, n = 5) # Los 5 más gordos
+pin %>% slice_min(masa_corporal_g, n = 5)
+```
+
+-   `n()` -\> cuenta numero de observaciones
+-   `n_distinct()` -\> cuenta numero de observaciones diferentes
+
+```{r}
+#pin %>% n_distinct(sexo) # no funciona ayuda!! Porque funciona con vectores, no tablas.
+
+# Opción 1:
+n_distinct(pin$sexo)
+
+# Opción 2:
+pin %>% summarise(n_sexos = n_distinct(sexo))
+pin %>% summarise(n_sexos = n_distinct(sexo, na.rm = TRUE))
+```
+
+-   `count()` -\> Cuenta respecto a una variable
+
+```{r}
+pin %>% count(especie)
+pin %>% count(especie, isla)
+pin %>% count(sexo)
+```
+
+# Clase 03
+
+-   Como hacer un chunck en quarto con Mac: Cmd + Option + i
+
+-   Como hacer el pipe %\>% en Mac: Shift + Command + m
+
+-   Para hacer new project, a la derecha, me aparece también los proyectos últimos que he abierto. Me parece útil.
+
+-   Ojo funcion filter() existe en stats y dplyr, es importante especificar a cuál nos referimos. Por defecto lo de dplyr se prioriza eso si.
+
+## Funciones de hoy
+
+-   group_by()
+-   summarise()
+
+Pregunta: Queremos saber cuántas especies diferentes hay por isla, para eso tengo que contar el número de especies diferentes pero por grupitos (islas), hay que separar esos grupitos.
+
+```{r}
+library(tidyverse)
+
+dat <- read_csv("https://raw.githubusercontent.com/rladieschile/taller-regex-2021/refs/heads/main/datos/pinguinos.csv")
+```
+
+-   length() -\> Largo de algo
+-   paste() -\> Pega cosas
+-   n() -\> Cuenta el número de filas
+
+```{r}
+# Riqueza
+dat %>%
+  group_by(isla) %>% 
+  summarise(riqueza = n_distinct(especie),
+            riqueza2 = length(unique(especie)),
+            especies = paste(unique(especie), collapse = "-"))
+  
+# Abundancia
+dat %>% 
+  group_by(isla) %>% 
+  summarise(abundancia = n()) #Esto sirve porque cada fila es una observación
+
+# Opción 1
+dat %>% 
+  group_by(isla, especie, sexo) %>% 
+  summarise(abundancia = n()) 
+# Opción 2
+dat %>% 
+  count(isla, especie, sexo)
+
+# Abundancia y riqueza
+dat %>% 
+  group_by(isla, sexo) %>% 
+  summarise(abundancia = n(),
+            riqueza = n_distinct(especie),
+            especies = paste(unique(especie), collapse = "-"))
+```
+
+Otro ejemplo de Antonio, proporción de machos y hembras por isla
+
+-   drop.na()
+
+```{r}
+#Esto lo hice yo (lo entendí diferente xd):
+dat %>% 
+  group_by(isla, sexo) %>% 
+  summarise(cantidad = n(),
+            proporcion = n()/344) %>% 
+  ungroup() %>% 
+  mutate(corroborar = sum(proporcion))
+
+# Stephy:
+dat %>% 
+  group_by(isla, sexo) %>% 
+  summarise(numero = n()) %>% 
+  drop_na() %>%  # borra las filas que hay algún NA en alguna parte
+  pivot_wider(names_from = sexo, values_from = numero) %>% #nombres desde la columna sexo, valores desde numero. Cambio de ancho a largo
+  mutate(prop = hembra/macho)
+```
+
+## group_by() %\>% mutate()
+
+No quiero perder todas los datos que tenía, antes solo resumía
+
+```{r}
+# Partiendo por el máximo del largo de pico en mm
+# Aquí no pierdo los datos! Ninguna observación. Ahora creo una columna nueva.
+dat %>% 
+  group_by(isla) %>%
+  mutate(max_largo_pico_mm = max(largo_pico_mm, na.rm = T)) #recordar lo de na.rm!
+
+dat %>% 
+  group_by(isla) %>%
+  summarise(max_largo_pico_mm = max(largo_pico_mm, na.rm = T)) #recordar lo de na.rm!
+
+# La gracia del primero es que puedo evaluar cada pingüino o cada observación con una estadística
+```
+
+-   Ordena mi código: Command + shift + a
+-   Pone un #, comenta: Command + shift + c
+
+```{r}
+a <- dat %>%
+  group_by(isla) %>%
+  mutate(
+    max_largo_pico_mm = max(largo_pico_mm, na.rm = T),
+    diff_largo_pico_mm = max_largo_pico_mm - largo_pico_mm
+  ) #recordar lo de na.rm!
+```
+
+# Clase 04
+
+```{r}
+library(tidyverse)
+
+dat <- read_csv("https://raw.githubusercontent.com/rladieschile/taller-regex-2021/refs/heads/main/datos/pinguinos.csv")
+```
+
+## Funciones para unir tablas
+
+Primero hacemos nuestra propia tabla (también puede cargarse). Funcion tibble() o dataframe()
+
+```{r}
+coord_penguin <- tibble(
+  island = c("Dream", "Biscoe", "Torgersen", "Anvers"),
+  lat_y = c(-64.7333, -65.4333, -64.7666, -64.77),
+  long_x = c(-64.2333, -65.5000, -64.0833, -64.05)
+)
+
+# Al siguiente le faltan las coordenadas de una isla
+coord_penguin_na <- tibble(
+  island = c("Dream", "Torgersen", "Anvers"),
+  lat_y = c(-64.7333, -64.7666, -64.77),
+  long_x = c(-64.2333, -64.0833, -64.05)
+)
+```
+
+-   left_join() -\> Para unir dos tablas, la que manda es la de la izquierda.
+
+```{r}
+# El siguiente tira error porque no hay columnar en comun
+#left_join <- dat %>%
+#  left_join(coord_penguin)
+
+# Esta es una opción, a veces cambiar nombres no es lo más óptimo, depende el caso
+left_join <- dat %>%
+  left_join(coord_penguin, by = c("isla" = "island"))
+
+# Si lo hubiera hecho con el que le falta una isla:
+left_join <- dat %>%
+  left_join(coord_penguin_na, by = c("isla" = "island"))
+
+# Cambiando el orden:
+left_join <- coord_penguin %>%
+  left_join(dat, by = c("island" = "isla")) #Se repiten las filas para todas las observaciones de dat. Al final queda una observación de la isla anvers con NA.
+
+# Y si uso coord_penguin_na:
+left_join <- coord_penguin_na %>%
+  left_join(dat, by = c("island" = "isla")) # No está la isla Biscoe! Quedan fuera esas obs.
+
+```
+
+-   right_join() -\> Para unir dos tablas, la que manda es la de la derecha! Es lo mismo.
+
+```{r}
+# El siguiente tira error porque no hay columnar en comun
+#right_join <- dat %>%
+#  right_join(coord_penguin)
+
+# Esta es una opción, a veces cambiar nombres no es lo más óptimo, depende el caso
+right_join <- dat %>%
+  right_join(coord_penguin, by = c("isla" = "island"))
+
+# Si lo hubiera hecho con el que le falta una isla:
+right_join <- dat %>%
+  right_join(coord_penguin_na, by = c("isla" = "island"))
+
+# Cambiando el orden:
+right_join <- coord_penguin %>%
+  right_join(dat, by = c("island" = "isla")) #Se repiten las filas para todas las observaciones de dat. Al final queda una observación de la isla anvers con NA.
+
+# Y si uso coord_penguin_na:
+right_join <- coord_penguin_na %>%
+  right_join(dat, by = c("island" = "isla")) # No está la isla Biscoe! Quedan fuera esas obs.
+
+```
+
+-   inner_join() -\> Se hace la unión de las tablas según una columna común y se mantienen las categorías que se encuentran en AMBAS tablas.
+
+```{r}
+# Ejemplo acá pierdo isla Anvers
+inner_join <- dat %>% 
+  inner_join(coord_penguin, by = c("isla" = "island"))
+
+# Acá pierdo los biscoe y anvers, porque no está en común
+inner_join_na <- dat %>% 
+  inner_join(coord_penguin_na, by = c("isla" = "island"))
+```
+
+-   full_join() -\> Todo lo contrario a lo anterior. Acá hace la unión de dos tablas y se mantienen TODAS las categorías. Cuando no quiero perder nada de información.
+
+```{r}
+# En ambos casos serán las mismas observaciones, porque se mantiene todo!
+
+# Caso 1:
+full_join <- dat %>% 
+  full_join(coord_penguin, by = c("isla" = "island"))
+
+# Caso 2:
+full_join_na <- dat %>% 
+  full_join(coord_penguin_na, by = c("isla" = "island"))
+```
+
+Comentarios, fijarse que las categorías dentro de una columna sean lo mismo. Ejemplo, si en dos planillas hay la columna campaña, pero en una dice "ver-2021" y en la otra "verano-2021", no lo va a unir bien.
+
+## Funciones para reordenar tablas
+
+-   Sirven para pasar de un formato a otro, es bueno por ejemplo si quiero seleccionar una columna, como largo_pico_mm.
+
+-   En formato largo es una observación fila, y cada variable una columna, pero se puede pasar a formato largo, que sea solo una columna "variable" y se condensan todas las variables.
+
+-   pivot_longer() -\> Mantiene un punto de anclaje y pivotea o dobla al largo o sentido vertical.
+
+```{r}
+dat_longer <- dat %>% 
+  pivot_longer(cols = largo_pico_mm:masa_corporal_g) # cols es lo que quiero pivotear. Muy util para ciencia de datos!
+
+dat_longer <- dat %>% 
+  pivot_longer(cols = largo_pico_mm:masa_corporal_g, names_to = "nombre_parametro", values_to = "valor") # le asigno nombre a las columnas nuevas
+```
+
+¿Y si quisiera separar la unidad de medida del parámetro?
+
+```{r}
+# forma 1:
+dat_longer <- dat %>% 
+  pivot_longer(cols = largo_pico_mm:masa_corporal_g,
+               names_pattern = "(.*_.*)_(.*)", # cada () es que quiero separar dos cosas, que estas separadas por un "_"
+                                             # el ".*" es "cualquier cosa", ".*_.*" es que esa 1º parte puede estar separada por un "_" o no.
+               names_to = c("nombre_parametro", "unidad"), # importante darle el nombre a la columna de unidad
+               values_to = "valor")
+
+# Forma 2:
+dat_longer <- dat %>% 
+  pivot_longer(cols = largo_pico_mm:masa_corporal_g,
+               names_sep = "_",
+               names_to = c("nombre_parametro", "estructura_corporal", "unidad"), # importante darle el nombre a la columna de unidad y    estructura_corporal
+               values_to = "valor")
+```
+
+-   pivot_wider() -\> Mantiene un punto de anclaje y pivotea al ancho.
+
+Esto es menos simple, acá perdí identificador de cada pingüino que es cada fila, un pingüino.
+
+```{r}
+# Caso 1
+# Calculamos el promedio para ir resumiendo
+dat_longer_mean <- dat_longer %>% 
+  group_by(isla, nombre_parametro) %>%
+  summarise(media = mean(valor, na.rm = T))
+
+# La tabla anterior sirve para un informe, pero no es lo mejor quizás para un informe por el espacio.
+
+dat_mean_wider <- dat_longer_mean %>% 
+  pivot_wider(id_cols = isla, names_from = "nombre_parametro", values_from = "media") #id_cols es lo que quiero dejar fijo
+  
+```
+
+```{r}
+# Caso 2, caso más "complejo", cuando tengo más de una columna que quiero mantener antes de pivotar:
+
+# Calculamos el promedio para ir resumiendo
+dat_longer_mean <- dat_longer %>% 
+  group_by(isla, especie, nombre_parametro) %>%
+  summarise(media = mean(valor, na.rm = T))
+
+# La tabla anterior sirve para un informe, pero no es lo mejor quizás para un informe por el espacio.
+
+dat_mean_wider <- dat_longer_mean %>% 
+  pivot_wider(id_cols = c(isla, especie), names_from = "nombre_parametro", values_from = "media") #id_cols es lo que quiero dejar fijo
+  
+```
+
+# Clase 05
+
+Funciones que nos sirven para hacer condicional.
+
+-   Dos funciones: ifelse. Si pasa una condición, haz esto, sino esto otro.
+-   Esta función entrega vectores.
+
+```{r}
+animales <- c("perro", "gato", "cerdo")
+
+# Si es perro, 1, sino 2:
+ifelse(animales == "perro", 1, 2)
+
+animales2 <- c("perro", "gato", "cerdo", "pájaro")
+ifelse(animales2 == "pájaro", "ave", "mamífero")
+```
+
+-   Coerción: Mezclar en un mismo vector textos y numeros por ejemplo, mezclar naturaleza vectores.
+
+```{r}
+# Este ejemplo lo transforma todo a character, a pesar de que escribí 0 numérico.
+ifelse(animales2 == "pájaro", "ave", 0)
+```
+
+Otra forma de hacerlo:
+
+```{r}
+#if(animales2 == "pájaro"){"ave"}else{NA}
+# Mmmm mejor la otra, no me funciona bien esto, funciona solo con el primer valor del vector.
+```
+
+Todo lo anterior es con R base, ahora veamos lo del tidyverse.
+
+```{r}
+library(tidyverse)
+
+dat <- read_csv("https://raw.githubusercontent.com/rladieschile/taller-regex-2021/refs/heads/main/datos/pinguinos.csv")
+
+# Veamos, si el año es mayor al 2008 es reciente, sino antiguo
+
+dat %>% 
+  mutate(camp = if_else(anio == 2009, "reciente", "pasado"),
+         camp2 = if_else(anio <= 2008, "pasado", "reciente"), # dos formas diferentes de escribirlo
+         camp3 = if_else(anio == 2008 | anio == 2009, "reciente", "pasado"),
+         camp4 = if_else(anio == max(anio, na.rm = T), "reciente", "pasado")) # Todo diferente, ver lo más óptimo o eficiente
+
+# Mantener el valor, sino otro:
+
+dat %>% 
+  mutate(sex = if_else(is.na(sexo), "indeterminado", sexo))
+```
+
+-   Podemos mezclar columnas y condiciones!:
+
+```{r}
+# Podemos mezclar columnas:
+
+dat_adultados <- dat %>% 
+  mutate(adultos = if_else(sexo == "macho" & masa_corporal_g >= 4800, "macho adulto", 
+                           if_else(sexo == "hembre" & masa_corporal_g >= 4000, "hembra adulta", NA)))
+```
+
+-   case_when() -\> Se puede hacer lo mismo
+
+```{r}
+# Mucho más simple!!!!
+adultos_casewhen <- dat %>%
+  mutate(adultos = case_when(sexo == "macho" & masa_corporal_g >= 4800 ~ "macho adulto", # condición 1!
+                             sexo == "hembra" & masa_corporal_g >= 4000 ~ "hembra adulta", # condición 2!!
+                             TRUE ~ NA_character_))
+
+adultos_casewhen <- dat %>%
+  mutate(adultos = case_when(sexo == "macho" & masa_corporal_g >= 4800 ~ "macho adulto", # condición 1!
+                             sexo == "hembra" & masa_corporal_g >= 4000 ~ "hembra adulta", # condición 2!!
+                             TRUE ~ "indeterminado"))
+
+# Puedo poner millones de condiciones!!!!!
+```
+
+Corroborar con un gráfico:
+
+```{r}
+ggplot(adultos_casewhen, aes(x = masa_corporal_g, fill = adultos))+
+  geom_histogram()+
+  facet_wrap(~sexo)
+```
+
+Se puede modificar una misma columna, con antes evaluar una condición:
+
+```{r}
+adultos_casewhen <- dat %>%
+  mutate(adultos = case_when(sexo == "macho" & masa_corporal_g >= 4800 ~ "macho adulto", # condición 1!
+                             sexo == "hembra" & masa_corporal_g >= 4000 ~ "hembra adulta", # condición 2!!
+                             TRUE ~ "indeterminado"),
+         sexo = case_when(is.na(sexo) ~ "nada",
+                          TRUE ~ sexo))
+```
+
+Ayuda: Función quantil:
+
+```{r}
+quantile(dat$masa_corporal_g, na.rm = T)
+```
+
+# Clase 06
+
+-   Visualización de datos con ggplot(), no todo es los típicos gráficos científicos o convencionales.
+-   Tidytuesday, buscar desafíos o lo que sea para practicar!
+-   Organización: rfordatascience
+
+ggplot() funciona en capas: 0) Datos 1) Capas 2) Escalas 3) Coordenadas 4) Facetas 5) Tema
+
+```{r}
+library(tidyverse)
+
+dat <- read_csv("https://raw.githubusercontent.com/rladieschile/taller-regex-2021/refs/heads/main/datos/pinguinos.csv")
+```
+
+Hagamos un gráfico simple:
+
+```{r}
+ggplot() # me grafica el panel
+
+ggplot(dat) +
+  aes(x = largo_pico_mm, y = largo_aleta_mm) # le especifico los ejes nomas! aes() son los ejes
+
+ggplot(dat) +
+  aes(x = largo_pico_mm, y = largo_aleta_mm) +
+  geom_point()
+```
+
+Lo anterior, poner aes() por afuera es ok si es que sólo utilizo dat como datos y que esos serán los ejes para siempre. En caso de usar más datos, mejor usar:
+
+```{r}
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm)) +
+  geom_point()
+# ojo! Esto todo para lo que haga abajo será con esos ejes
+```
+
+¿Y si quiero que una geometría sea solo para un tipo de geometría?
+
+```{r}
+ggplot(dat) +
+  geom_point(aes(x = largo_pico_mm, y = largo_aleta_mm))
+
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm)) +
+  geom_point()+
+  geom_smooth()
+```
+
+-   puntos solo tienen color
+-   barras tienen color y relleno
+
+```{r}
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie)) +
+  geom_point() 
+
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie)) +
+  geom_point()+
+  geom_smooth() # el color es como un group_by(), como está al inicio es para todo lo que venga abajo
+
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm)) +
+  geom_point(aes(colour = especie))+ # acá especifico que los colores sean solo para los puntos
+  geom_smooth() 
+```
+
+Hasta acá vimos todo de colores asociado a los datos.
+
+## Escalas
+
+¿Y si quiero cambiar los colores?
+
+```{r}
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie)) +
+  geom_point() +
+  scale_colour_manual(values = c("orange", "purple", "cyan4")) 
+```
+
+¿Y si quiero cambiar el eje X o Y?
+
+```{r}
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie)) +
+  geom_point() +
+  scale_colour_manual(values = c("orange", "purple", "cyan4")) +
+  scale_x_continuous(n.breaks = 6) + # número de cortes del eje X 
+  scale_y_continuous(n.breaks = 4)
+```
+
+¿Y si además del color, quiero que la forma del punto cambie por especie?
+
+```{r}
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie, shape = especie)) +
+  geom_point() 
+```
+
+Lo anterior, la forma, también podemos escalarla:
+
+```{r}
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie, shape = especie)) +
+  geom_point() +
+  scale_shape_manual(values = c(15, 25, 8)) #buscar los valores de cada forma
+```
+
+Ejemplo, corte con el origen en cero:
+
+```{r}
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie)) +
+  geom_point() +
+  scale_colour_manual(values = c("orange", "purple", "cyan4")) +
+  scale_y_continuous(n.breaks = 4, limits = c(0,250)) # que vaya desde 0 a 250, puedo poner el rango
+```
+
+*Leer ayuda de la función!!*
+
+Wooow se puede poner nombre a los números!:
+
+```{r}
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie)) +
+  geom_point() +
+  scale_colour_manual(values = c("orange", "purple", "cyan4")) +
+  scale_y_continuous(n.breaks = 4, labels = c( "gato", "perro", "cerdo", "pájaro")) # Indico que los valores tengan un rango
+```
+
+Entonces: - Todo lo que está dentro del aes() se puede escalar, tanto si está en ggplot() o en alguna geometría, ejemplo geom_point().
+
+```{r}
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie, shape = especie)) +
+  geom_point(aes(size = isla)) +
+  scale_shape_manual(values = c(15, 25, 8)) 
+
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie, shape = especie)) +
+  geom_point(aes(size = isla)) +
+  scale_shape_manual(values = c(15, 25, 8)) +
+  scale_size_manual(values = c(1, 5, 10)) # lo estamos escalando
+```
+
+## Coordenadas
+
+-   Por defecto siempre con coordenadas cartesianas, es cambiar ejes numéricos a categóricas, por ej.
+-   Función coord\_\*()
+
+```{r}
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie)) +
+  geom_point() +
+  scale_colour_manual(values = c("orange", "purple", "cyan4")) +
+  coord_equal() # Hace que todo quede en cuadritos iguales
+```
+
+Si no queremos que cambie la modificación de aspecto, que siempre tenga las mismas dimensiones el gráfico, al momento de descargar:
+
+```{r}
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie)) +
+  geom_point() +
+  scale_colour_manual(values = c("orange", "purple", "cyan4")) +
+  coord_fixed(ratio = 0.2)
+```
+
+Coordenadas polares:
+
+```{r}
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie)) +
+  geom_point() +
+  scale_colour_manual(values = c("orange", "purple", "cyan4")) +
+  coord_polar() #el cero está al medio
+```
+
+Coordenadas son importantes cuando hacemos mapas principalmente.
+
+## Facetas
+
+-   facet_grid() y facet_wrap(), en teoría funcionan igual, pero tienen armuentos diferentes.
+
+```{r}
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie)) +
+  geom_point() +
+  scale_colour_manual(values = c("orange", "purple", "cyan4")) +
+  facet_grid(~isla)
+
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie)) +
+  geom_point() +
+  scale_colour_manual(values = c("orange", "purple", "cyan4")) +
+  facet_wrap(~isla)
+
+# Por doble criterio las facetas:
+
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie)) +
+  geom_point() +
+  scale_colour_manual(values = c("orange", "purple", "cyan4")) +
+  facet_grid(sexo~isla)
+
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie)) +
+  geom_point() +
+  scale_colour_manual(values = c("orange", "purple", "cyan4")) +
+  facet_wrap(sexo ~isla)
+
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie)) +
+  geom_point() +
+  scale_colour_manual(values = c("orange", "purple", "cyan4")) +
+  facet_grid(sexo~anio)
+```
+
+*Exploración de argumentos*:
+
+```{r}
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie)) +
+  geom_point() +
+  scale_colour_manual(values = c("orange", "purple", "cyan4")) +
+  facet_wrap(sexo ~isla, nrow = 2) # ahí especifico solo dos filas
+
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie)) +
+  geom_point() +
+  scale_colour_manual(values = c("orange", "purple", "cyan4")) +
+  facet_wrap(sexo ~isla, scales = "free_y") # genera ejes para cada faceta, puede ser free_x, o solo free para ambos
+
+# Ojo, antes me servía, pero en este nuevo compu nop:
+# ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie)) +
+#   geom_point() +
+#   scale_colour_manual(values = c("orange", "purple", "cyan4")) +
+#   facet_wrap(sexo ~isla, strip.position = "x") # abajo quedan los nombres de las facetas
+
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie)) +
+  geom_point() +
+  scale_colour_manual(values = c("orange", "purple", "cyan4")) +
+  facet_wrap(sexo ~isla, strip.position = "right") # a la derecha quedan los nombres de la facetas
+
+```
+
+## Tema
+
+```{r}
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie)) +
+  geom_point() +
+  scale_colour_manual(values = c("orange", "purple", "cyan4")) +
+  theme_bw() # black white
+
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie)) +
+  geom_point() +
+  scale_colour_manual(values = c("orange", "purple", "cyan4")) +
+  theme_linedraw()
+
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie)) +
+  geom_point() +
+  scale_colour_manual(values = c("orange", "purple", "cyan4")) +
+  theme_minimal()
+```
+
+Hay paquetes que ofrecen temas:
+
+```{r}
+library(ggthemes)
+
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie)) +
+  geom_point() +
+  scale_colour_manual(values = c("orange", "purple", "cyan4")) +
+  ggthemes::theme_economist_white()
+
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie)) +
+  geom_point() +
+  scale_colour_manual(values = c("orange", "purple", "cyan4")) +
+  ggthemes::theme_excel()
+```
+
+Podemos cambiar argumentos específicos del tema
+
+```{r}
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie)) +
+  geom_point() +
+  scale_colour_manual(values = c("orange", "purple", "cyan4")) +
+  theme(legend.position = "bottom", #leyenda que vaya abajo
+        panel.background = element_rect(fill = "yellow"), #pongo fondo amarillo
+        panel.grid = element_line(colour = "grey10")) # para que se vean la líneas
+
+# RECORDAR!! LÍNEAS TIENEN COLOR, NO RELLENO.
+
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie)) +
+  geom_point() +
+  scale_colour_manual(values = c("orange", "purple", "cyan4")) +
+  theme(axis.title = element_text(size = 25, colour = "cyan4")) # cambio tamaño y color del texto del nombre de los ejes
+```
+
+## Títulos y etiquetas
+
+-   Función labs()
+
+```{r}
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie)) +
+  geom_point() +
+  scale_colour_manual(values = c("orange", "purple", "cyan4")) +
+  labs(title = "Mi gráfico lindo", subtitle = "Maravillosos pingüinos", caption = "@fran") # título, subtitulo y caption que es el autor.
+
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie)) +
+  geom_point() +
+  scale_colour_manual(values = c("orange", "purple", "cyan4")) +
+  labs(title = "Mi gráfico lindo", subtitle = "Maravillosos pingüinos", tag = "A") # Lo mismo, pero con nombre figura, sirve para nombre figuras
+
+ggplot(dat, aes(x = largo_pico_mm, y = largo_aleta_mm, colour = especie)) +
+  geom_point() +
+  scale_colour_manual(values = c("orange", "purple", "cyan4")) +
+  labs(title = "Mi gráfico lindo", subtitle = "Maravillosos pingüinos",
+       x = "Largo pico (mm)",
+       y = "largo aleta (mm)") #mofico nombres ejes
+```
+
+En clase solo vimos dos tipos de geometría, el geom_point() y geom_smooth(), pero hay muchos!! Buscar en internet: **ggplot2.tidyverse.org/reference/**
+
+# Clase 07
+
+Hoy sobre Rmarkdown (o quarto!):
+
+-   Permite escribir o hacer reportes
+
+-   Paquete knitr -\> para hacer tablas o gráficos visualización
+
+-   pandoc -\> Permite transformas documentos en otros, ejemplo de word a pdf, etc. Se pueden hacer presentaciones, sitios web, etc.
+
+-   Markdown es un lenguaje de marcado
+
+-   En negrita: \*\*
+
+-   Italica: \*
+
+-   code: `code`
+
+-   Linea horizontal que separe: ---
+
+-   Link: [title](http:://....)
+
+-   Imagen: ![all text](image.jpg) \# texto alternativo
+
+-   Tablas: con barritas, ver sintaxis.
+
+-   Nota al pie: "\[\^1\]: This is the footnote."
+
+-   YAML, es lo de inicio del quarto, que es para todo el documento
+
+-   Hay un montón de opciones de Rmarkdown, buscar!
+
+-   Para mostrar código: echo=TRUE
+
+```{r}
+library(tidyverse)
+
+dat <- read_csv("https://raw.githubusercontent.com/rladieschile/taller-regex-2021/refs/heads/main/datos/pinguinos.csv")
+```
+
+## Imprimir una tabla
+
+```{r}
+# En el nombre del chunck, con "results = " puedo hacer esto
+options(knitr.kable.NA = "-") # Los NA los pasa a una "-", puede ser cualquier cosa
+
+tab1 <- dat %>% 
+  group_by(sexo) %>% 
+  summarise(n = n()) %>% 
+  rename(Sexo = sexo, "Numero de individuos" = n)
+
+tab1
+
+library(kableExtra)
+kable(tab1, format = "pandoc") # puedo usar el argumento "formato = ", pandoc para word
+
+
+```
+
+## Dimensiones figuras
+
+-   fig.height = 4
+-   fig.width = 6
+
+Lo puedo poner general al inicio.
+
+## Formatos de word
+
+-   Podemos definir los diseños, formato de referencia
+-   Un mismo word que generé desde quarto, lo puedo modificar y poner el diseño que me guste, lo guardo con un nombre caracteristico, ejemplo "estilo.docx"
+-   Al inicio poner: reference_docx: "estilo.docx", va en
+
+output: word_document: fig_height: 4 reference_docx: "estilo.docx"
+
+-   "Identación": Son los espacios para código, es importante respetarlos.
+-   Se puede cambiar también los estilos de pdf o html

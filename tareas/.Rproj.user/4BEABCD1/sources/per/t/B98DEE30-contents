@@ -1,0 +1,126 @@
+---
+title: "Tarea 06"
+author: "Francisca Muñoz Narbona"
+format: docx
+editor: visual
+editor_options: 
+  chunk_output_type: console
+dpi: 300
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, results = F)
+```
+
+
+## Cargar datos
+
+```{r}
+library(tidyverse)
+
+pokemon <- read_csv("datos/pokemon.csv")
+```
+
+## Pregunta 1
+
+Para resolver esta pregunta, fue interesante tener que transformar de una columna numérica a factor, para que los colores se vieran bien. Me refiero a la columna generación.
+
+```{r, fig.height= 4, fig.width=6, dpi = 300}
+# Caso 1
+pokemon1 <- pokemon %>% 
+  mutate(generacion = as.factor(generacion),
+         nivel_evolucion = as.factor(nivel_evolucion))
+
+ggplot(pokemon1, aes(x = velocidad, y = defensa, colour = generacion))+
+  geom_point() +
+  scale_colour_manual( values = c("#6C8EBF", "#8FB996", "#E6B566", "#C97C5D", "#9A8FBF", "#5FA8A8"))+
+  labs(y = "Defensa",
+       x = "Velocidad",
+       colour = "Generación")
+```
+
+```{r, fig.height= 4, fig.width=6, dpi = 300}
+# Caso 2
+ggplot(pokemon, aes(x = velocidad, y = defensa, colour = es_legendario))+
+  geom_point() +
+  labs(x = "Velocidad",
+       y = "Defensa",
+       caption = "Fran M.",
+       colour = "¿Es legendario?") + # No es "legend", es "colour"
+  theme(legend.position = "bottom")
+```
+
+## Pregunta 2
+
+```{r, fig.height= 5, fig.width=7, dpi=300}
+ggplot(pokemon, aes(x = velocidad, y = defensa, colour = es_legendario))+
+  geom_point() +
+  facet_wrap(~generacion, nrow = 3) +
+  labs(title = "Visualización de defensa y velocidad para pokémons para cada generación",
+       subtitle = "Generaciones: 1, 2, 3, 4, 5 y 6",
+       x = "Velocidad",
+       y = "Defensa",
+       caption = "Fran M.",
+       colour = "¿Es legendario?") + # No es "legend", es "colour"
+  theme(legend.position = "bottom")
+```
+
+## Pregunta 3
+
+```{r, fig.height= 4, fig.width=6, dpi=300}
+# Caso 1:
+ggplot(pokemon1, aes(x = velocidad, y = generacion, colour = es_legendario))+
+  geom_boxplot()+
+  labs(x = "Velocidad",
+       y = "Generación",
+       caption = "Fran M.",
+       colour = "¿Es legendario?") + # No es "legend", es "colour"
+  theme(legend.position = "bottom")
+
+# Caso 2:
+ggplot(pokemon, aes(x = velocidad, y = defensa, colour = es_legendario))+
+  geom_smooth()+
+  labs(x = "Velocidad",
+       y = "Defensa",
+       caption = "Fran M.",
+       colour = "¿Es legendario?") + # No es "legend", es "colour"
+  theme(legend.position = "bottom")
+
+# Caso 3: Con columnas es "fill", no "colour"
+ggplot(pokemon, aes(x = velocidad, y = defensa, fill = es_legendario))+
+  geom_col() +
+  labs(x = "Velocidad",
+       y = "Defensa",
+       caption = "Fran M.",
+       fill = "¿Es legendario?") + # No es "legend", es "colour"
+  theme(legend.position = "bottom")
+
+# Caso 4:
+ggplot(pokemon1, aes(x = generacion, y = defensa, colour = es_legendario))+
+  geom_violin()+
+  labs(x = "Generación",
+       y = "Defensa",
+       caption = "Fran M.",
+       colour = "¿Es legendario?") + # No es "legend", es "colour"
+  theme(legend.position = "bottom")
+
+# Último caso (no sé si tiene mucho sentido, igual es geom_point()):
+ggplot(pokemon, aes(x = velocidad, y = defensa, colour = es_legendario))+
+  geom_point()+
+  coord_polar()
+```
+
+## Pregunta 4
+
+```{r, fig.height= 4, fig.width=6, dpi=300}
+ggplot(pokemon1, aes(x = puntos_vida, y = ataque, colour = nivel_evolucion))+
+  geom_point(aes(size = es_legendario))+
+  scale_colour_manual( values = c("#6C8EBF", "#8FB996", "#E6B566", "#C97C5D", "#9A8FBF", "#5FA8A8"))+
+  scale_shape_manual(values = c(2, 3, 4, 5, 6, 7))+
+  scale_y_continuous(n.breaks = 8)+
+  labs(x = "Puntos de vida",
+       y = "Ataque",
+       colour = "Nivel de evolución",
+       size = "¿Es legendario?") +
+  theme_light()
+```
